@@ -202,6 +202,8 @@
 			positions($this, data, children, focus, function(child, pos) {
 				$(child).animate(pos, 400, function() {
 					data.transitioning = false;
+					if(!data.conf.loop)
+						checkPosition($this, newIndex);
 				});
 			});
 			data.index = newIndex;
