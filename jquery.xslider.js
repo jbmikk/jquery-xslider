@@ -62,6 +62,30 @@
 			1;
 	}
 
+	var checkPosition = function($this, index) {
+		var data = $this.data('xslider');
+		var threshold = 20;
+		if(data.children.length > 0) {
+			var first = $(data.children[0]);
+			var last = $(data.children[data.children.length-1]);
+			var left = first.position().left;
+			var right = last.position().left + last.outerWidth();
+			if(left > -threshold)
+				$this.trigger('first-visible');
+			else 
+				$this.trigger('first-hidden');
+			if(right -$this.width() < threshold )
+				$this.trigger('last-visible');
+			else 
+				$this.trigger('last-hidden');
+		}
+		if(index+1 >= data.children.length) {
+			$this.trigger('reached-last');
+		} else if(index-1 < 0) {
+			$this.trigger('reached-first');
+		}
+	}
+
 	var methods = {
 		init : each(function( options ) {
 			var $this = $(this),
@@ -105,6 +129,10 @@
 				if(conf.autostart) {
 					$this.xslider('start');
 				}
+				setTimeout(function() {
+					if(!conf.loop)
+						checkPosition($this, 0);
+				}, 0);
 			}
 		}),
 
@@ -132,6 +160,8 @@
 			positions($this, data, children, focus, function(child, pos) {
 				$(child).css(pos);
 			});
+			if(!data.conf.loop)
+				checkPosition($this, data.index);
 		}),
 
 		transition: each(function(count) {
@@ -151,8 +181,13 @@
 				prevFocus = virtualIndex(data.children, focus, -count);
 			} else {
 				newIndex = data.index + count;
-				if(newIndex >= data.children.length || newIndex < 0) {
+
+				if(newIndex >= data.children.length || newIndex < 0)
 					return;
+				if(data.index -1 < 0 && newIndex > data.index) {
+					$this.trigger('left-first');
+				} else if(data.index +1 >= data.children.length && newIndex < data.index) {
+					$this.trigger('left-last');
 				}
 				focus = newIndex;
 				prevFocus = focus-count;
